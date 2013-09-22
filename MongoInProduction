@@ -1,0 +1,84 @@
+Chef cookbook (Parse)
+
+blockdev set too large --> not using all of memory
+blockdev set too small -->
+
+sar -d 1
+. . .  and then look at the tps column!
+
+Use ext4 filesystem not xfs
+
+At the Linux level, be sure to:
+Raise fs limits
+Raise conn limits
+noatime
+nodiratime
+
+journal on  a separate volume (esp. if spinning disks)
+20K hard limit on connections
+
+MongoLab's mongoctl or Mongo Chef Cookbook
+
+Configures EBS raid
+Supports PIOPS
+
+Provisions from snapshots:
+Handle mult. clusters using knife-ev2
+Will not reset padding factors (record growth --> disk movement -->
+incr. padding factor)
+
+snapshot caveats:
+EBS snapshot will "just-in-time" lazy-load blocks from S3
+
+always warm up a secondary before promoting
+  - warm up both index and data
+  - blog.parse.com/2013/03/07/techniques-for-warming
+
+provisioning with initial sync
+
+compacts and repairs your collections and dbs
+
+Hard on your primary -- full table scan of all data
+
+On > 2.2.0 you can sync from a secondary by speed-spamming: rs.syncFrom()
+
+Run continuous compaction on your snapshot node
+
+Finding bad queries:
+db.currentOp()
+mongodb.log
+profiling collection
+
+db.currentOp()
+check the queue size (page yourself if >1000)
+Any index building?
+Sort by num_seconds
+Sort by num_yields, locktype
+Consider adding comments to queries
+Run explain() on queries that are long-running
+
+mongodb.log
+configure with --slowms
+look for high execution time, nscanned, nreturned
+See which queries are holding long locks?
+Match connection id's to IP's
+
+system.profile collection  (nuked on restart)
+
+Failure Scenarios
+
+Mongo will death spiral
+Know what your death spiral looks like. . .
+DO kill queries before the tipping point
+Don't kill internal mongo ops, only queries
+Don't kill writes.
+Don't kill slaving threads
+Don't kill index builds
+
+Never run with even # of votes
+Consider delegating votes to arbiters
+Set priority levels explicitly if you need warmup
+1 Primary, 2 Secondaries, 2 Arbiters
+
+Never kill oplog tailers or other internal db ops, this can crash 2ndaries
+
